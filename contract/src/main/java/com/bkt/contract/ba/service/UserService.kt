@@ -61,13 +61,21 @@ interface UserService : ExportService {
      * 获取杠杆倍数配置
      * 从小到大(最大杠杆倍数)
      */
-    fun getLeverageBrackets(symbol: String): Observable<List<LeverageBracketDto.BracketsBean>> {
-        return BaClient.instance.getApiService(symbol)
+    fun getLeverageBrackets(symbolOrPair: String): Observable<List<LeverageBracketDto.BracketsBean>> {
+        return BaClient.instance.getApiService(symbolOrPair)
                 .flatMap(object : Function<ContractProxyApiService, ObservableSource<List<LeverageBracketDto.BracketsBean>>> {
                     override fun apply(t: ContractProxyApiService): ObservableSource<List<LeverageBracketDto.BracketsBean>> {
-                        return t.getLeverageBracket(symbol, CommonService.INSTANCE.convertPair(symbol), null, System.currentTimeMillis())
-                                .map(HttpDataFunction())
-                                .map { it.get(0).brackets?.sortedBy { it.initialLeverage } };
+                        val pairConfigDto = BaClient.instance.getService(PairService::class.java)
+                                .getPairConfig(symbolOrPair)
+                        return if (pairConfigDto?.contractClassifyType == ContractType.USDT) {
+                            t.getLeverageBracket(symbolOrPair, null, null, System.currentTimeMillis())
+                                    .map(HttpDataFunction())
+                                    .map { it.get(0).brackets?.sortedBy { it.initialLeverage } };
+                        } else {
+                            t.getLeverageBracket(null, symbolOrPair, null, System.currentTimeMillis())
+                                    .map(HttpDataFunction())
+                                    .map { it.get(0).brackets?.sortedBy { it.initialLeverage } };
+                        }
                     }
                 });
     }
