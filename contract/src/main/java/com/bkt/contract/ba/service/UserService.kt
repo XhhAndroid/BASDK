@@ -72,7 +72,7 @@ interface UserService : ExportService {
                                     .map(HttpDataFunction())
                                     .map { it.get(0).brackets?.sortedBy { it.initialLeverage } };
                         } else {
-                            t.getLeverageBracket(null, symbolOrPair, null, System.currentTimeMillis())
+                            t.getLeverageBracket(null, pairConfigDto?.pair, null, System.currentTimeMillis())
                                     .map(HttpDataFunction())
                                     .map { it.get(0).brackets?.sortedBy { it.initialLeverage } };
                         }
